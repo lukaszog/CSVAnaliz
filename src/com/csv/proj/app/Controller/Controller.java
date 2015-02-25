@@ -3,9 +3,13 @@ package com.csv.proj.app.Controller;
 import com.csv.proj.app.model.Model;
 import com.csv.proj.app.view.AppListener;
 import com.csv.proj.app.view.View;
+import com.csv.proj.app.view.ViewListener;
+
+import javax.swing.*;
+import java.util.Map;
 
 
-public class Controller implements AppListener {
+public class Controller implements AppListener,ViewListener {
 
     private View view;
     private Model model;
@@ -37,6 +41,15 @@ public class Controller implements AppListener {
         }
     }
 
+    public void dataMap(Map<Integer,JTextField> jTextFieldMap){
+        try{
+            System.out.println("Jestem w dataMap");
+            model.filterColumn(view,jTextFieldMap);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+    }
     public void getHeader(){
         try{
             model.loadHeader(view);
@@ -48,8 +61,8 @@ public class Controller implements AppListener {
 
     public void getColumnId(int column){
         try{
-            model.loadColumnId(view,column);
-            System.out.println("Kontroler: getColumnId");
+          //  model.loadColumnId(view,column);
+            System.out.println("Kontroler: getColumnId"+ column);
         }catch (Exception e){
             e.printStackTrace();
         }

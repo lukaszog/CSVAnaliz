@@ -53,6 +53,9 @@ public class CSVFile {
         List<Row> filteredRows = filter(startRow,endRow,cellMap);
         //tutaj liczymy
 
+        System.out.println("jestem w calculate");
+
+
         for(int columnId: columnsIds)
         {
             result.put(columnId,0);
@@ -65,7 +68,7 @@ public class CSVFile {
                 int sumforColumn=result.get(columnId);
                 sumforColumn+=row.getCellInt(columnId);
                 result.put(columnId,sumforColumn);
-
+                System.out.println("licze");
             }
         }
 

@@ -9,4 +9,4 @@ public interface AppListener {
     public void getHeader();
     public void getColumnId(int column);
 
-    }
+}

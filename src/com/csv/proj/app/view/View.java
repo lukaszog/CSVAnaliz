@@ -19,7 +19,7 @@ import javax.swing.table.TableColumnModel;
 /**
  * Created by Łukasz on 2014-12-29.
  */
-public class View extends JFrame implements ViewListener {
+public class View extends JFrame{
 
 
     private Model model;
@@ -48,6 +48,8 @@ public class View extends JFrame implements ViewListener {
     private int xgdid=5;
     private Vector fields = new Vector<>();
     private Map<String, JTextField> field = new HashMap<>();
+    private int[] sum;
+    private int sum_do;
 
 
 
@@ -55,6 +57,7 @@ public class View extends JFrame implements ViewListener {
     public View(){
 
         super("Magazyn");
+
 
     }
 
@@ -77,23 +80,21 @@ public class View extends JFrame implements ViewListener {
 
     }
 
-    @Override
-    public void showColums() {
-
-        System.out.println("Jestem w showColums");
 
 
 
-    }
+
 
     public void loadHead(){
 
         header = model.getHead();
 
+        count = 1;
         int id=1;
         for(String head: header) {
             headermodel.addRow(new Object[]{id,head});
             id++;
+            count++;
         }
         System.out.println("jestem w loadhead");
     }
@@ -173,7 +174,8 @@ public class View extends JFrame implements ViewListener {
 
             boolean selected = checkBox.isSelected();
 
-
+            sum = new int[count];
+            sum_do = 0;
 
             headerTable.getModel().addTableModelListener(new TableModelListener() {
 
@@ -188,6 +190,8 @@ public class View extends JFrame implements ViewListener {
                         System.out.println("Row : " + e.getFirstRow() +
                                    " value :" + headerTable.getValueAt(e.getFirstRow(), 2));
                         appListener.getColumnId(id);
+
+                       // sum[sum_do] = id; //identyfikatory pól do sumowania
 
                         //create texfield
 
@@ -220,9 +224,16 @@ public class View extends JFrame implements ViewListener {
 
                 System.out.println("Click Detected by Lambda Listner");
 
+                //wysyłam do kontrolera mape - textField
+
+                fireDataMapEvent(textField);
+
                 for (Map.Entry<Integer, JTextField> entry : textField.entrySet())
                 {
                     System.out.println(entry.getKey() + "/" + entry.getValue().getText());
+
+
+
                 }
 
             });
@@ -234,6 +245,11 @@ public class View extends JFrame implements ViewListener {
             add(scrollOperation);
             add(resultPane);
         }
+    }
+
+    public void fireDataMapEvent(Map<Integer,JTextField> textFieldEntry)
+    {
+        viewListener.dataMap(textFieldEntry);
     }
 
     public void refreshPanel()
@@ -253,6 +269,10 @@ public class View extends JFrame implements ViewListener {
     public void setAppListener(AppListener appListener) {
 
         this.appListener = appListener;
+    }
+
+    public void setViewListener(ViewListener viewListener){
+        this.viewListener = viewListener;
     }
 
 

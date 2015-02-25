@@ -21,7 +21,8 @@ public class csvDAO extends SwingWorker<Void, Void> {
     private Map<Integer,String> cellMap = new HashMap<>();
     private CSVFile csvfile;
     private String job;
-
+    private String filename;
+    private Map<Integer,JTextField> map = new HashMap<>();
 
     public void setItself(Model model) {
         this.model = model;
@@ -32,7 +33,12 @@ public class csvDAO extends SwingWorker<Void, Void> {
     public void setView(View view) {
         this.view = view;
     }
-
+    public void setMap(Map<Integer,JTextField> dataMap){
+        this.map = dataMap;
+    }
+    public csvDAO(String filename){
+        this.filename = filename;
+    }
 
 
     protected Void doInBackground() throws Exception {
@@ -46,6 +52,10 @@ public class csvDAO extends SwingWorker<Void, Void> {
         if(job.equals("showColumn")){
 
             System.out.println("Jestem w showColumn");
+          //  csvfile = getColumn();
+        }
+        if(job.equals("filterColumn")){
+            System.out.println("Jestem w filterColumn");
             csvfile = getColumn();
         }
 
@@ -59,10 +69,12 @@ public class csvDAO extends SwingWorker<Void, Void> {
 
         if(job.equals("showColumn")){
 
-
+          //  model.setData(csvfile);
             System.out.println("jestm w done - showColumn");
         }
-
+        if(job.equals("filterColumn")){
+            System.out.println("jestem w done - filterColumn");
+        }
         if(job.equals("header")) {
 
             model.setHead(headers);
@@ -73,12 +85,10 @@ public class csvDAO extends SwingWorker<Void, Void> {
         }
 
     }
-
     protected CSVFile getColumn() throws  IOException{
 
-        CSVReader ile = new CSVReader(new FileReader("plik.csv"),';');
-
-
+        CSVReader ile = new CSVReader(new FileReader("WSTB.csv"),';');
+        System.out.println("Jestem w getColumn");
 
         int columnCount=0;
         String[] header = ile.readNext(); // assuming first read
@@ -86,19 +96,14 @@ public class csvDAO extends SwingWorker<Void, Void> {
         if (header != null) {                     // and there is a (header) line
             columnCount = header.length;       // get the column count
         }
-
         System.out.println("Liczba kolumn: " + columnCount);
-
-        CSVReader reader1 = new CSVReader(new FileReader("plik.csv"), ';');
+        CSVReader reader1 = new CSVReader(new FileReader("WSTB.csv"), ';');
 
         List<String[]> records = reader1.readAll();
         Iterator<String[]> iterator = records.iterator();
 
         headers = getHeader(records); //nazwy kolumn
-
-
         iterator.next();
-
 
         while(iterator.hasNext()){
 
@@ -117,11 +122,24 @@ public class csvDAO extends SwingWorker<Void, Void> {
 
         Iterator<String> headerIterator = headers.iterator();
 
+        int i=0;
+        cellMap.clear();
+        for (Map.Entry<Integer, JTextField> entry : map.entrySet())
+        {
+            System.out.println(entry.getKey() + "/" + entry.getValue().getText());
+             cellMap.put(entry.getKey(),entry.getValue().getText()); //numer kolumny, wartosc
+            //columnsIds[i] = entry.getKey();
+           // i++;
+        }
 
+        int[] columnsIds;
+        columnsIds = new int[10];
+        columnsIds[0]=7;
 
-        cellMap.put(5,"14"); //numer kolumny, wartosc
-        csvfile.filter(1,4,cellMap); //zakres, filrt
+       // cellMap.put(5,"14");
+       // csvfile.filter(1,4,cellMap); //zakres, filrt
 
+        csvfile.calculate(1,3000,cellMap,columnsIds);
         return csvfile;
     }
 
@@ -129,7 +147,7 @@ public class csvDAO extends SwingWorker<Void, Void> {
 
         List<String> head = new ArrayList<>();
 
-        CSVReader ile = new CSVReader(new FileReader("plik.csv"),';');
+        CSVReader ile = new CSVReader(new FileReader("WSTB.csv"),';');
 
         int columnCount=0;
         String[] header = ile.readNext(); // assuming first read
@@ -140,7 +158,7 @@ public class csvDAO extends SwingWorker<Void, Void> {
 
         System.out.println("Liczba kolumn: " + columnCount);
 
-        CSVReader reader1 = new CSVReader(new FileReader("plik.csv"), ';');
+        CSVReader reader1 = new CSVReader(new FileReader("WSTB.csv"), ';');
         List<String[]> records = reader1.readAll();
         Iterator<String[]> iterator = records.iterator();
 

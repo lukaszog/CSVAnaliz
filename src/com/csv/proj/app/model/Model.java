@@ -17,14 +17,16 @@ public class Model{
     private Map<Integer,String> cellMap = new HashMap<>();
     private List<String> headers = new LinkedList<>();
     private List<String> column = new LinkedList<>();
+    private Map<Integer, Integer> data = new HashMap<>();
+
 
 
     public void setHead(List<String> headers){
         this.headers = headers;
     }
 
-    public void setColumn(List<String> column){
-        this.column = column;
+    public void setData(Map<Integer, Integer> data){
+        this.data = data;
     }
 
 
@@ -48,7 +50,17 @@ public class Model{
         csvDAO.execute();
 
     }
+    public void filterColumn(View view, Map<Integer,JTextField> dataMap){
 
+        System.out.println("Jestem w Model.java -  filterColumn");
+        csvDAO csvDAO = new csvDAO();
+        csvDAO.setItself(this);
+        csvDAO.setJob("filterColumn");
+        csvDAO.setView(view);
+        csvDAO.setMap(dataMap);
+        csvDAO.execute();
+
+    }
     public void loadColumnId(View view, int column){
 
         System.out.println("Jestem w Model.java -  loadColumnId");

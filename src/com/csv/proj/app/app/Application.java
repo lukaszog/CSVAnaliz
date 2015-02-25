@@ -32,6 +32,7 @@ public class Application {
         View view = new View();
         Controller controller = new Controller(view,model);
         view.setAppListener(controller);
+        view.setViewListener(controller);
 
 
     }
