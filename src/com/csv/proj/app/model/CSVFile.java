@@ -13,6 +13,7 @@ public class CSVFile {
     private List<String> header = new LinkedList<>();
     private List<Row>    row = new LinkedList<>();
 
+
     public CSVFile(List<Row> row, List<String> header)
     {
         this.row = row;
@@ -25,7 +26,7 @@ public class CSVFile {
 
         System.out.println(row.size());
         // List<Row> fromRange = row;
-        List<Row> fromRange = row.subList(startRow-1,endRow);
+        List<Row> fromRange = row.subList(startRow-2,endRow);
         List<Row> filtered = new LinkedList<>();
 
         for(Row r: fromRange) {
@@ -47,7 +48,8 @@ public class CSVFile {
         return filtered;
     }
 
-    public Map<Integer, Integer> calculate(int startRow, int endRow, Map<Integer, String> cellMap, int[] columnsIds) {
+    public Map<Integer, Integer> calculate(int startRow, int endRow, Map<Integer, String> cellMap, List<Integer> columnsIds) {
+
 
         Map<Integer,Integer> result = new HashMap<>();
         List<Row> filteredRows = filter(startRow,endRow,cellMap);
@@ -68,8 +70,13 @@ public class CSVFile {
                 int sumforColumn=result.get(columnId);
                 sumforColumn+=row.getCellInt(columnId);
                 result.put(columnId,sumforColumn);
-                System.out.println("licze");
+                System.out.println("licze" +"ID: "+columnId + "value: " +  sumforColumn);
             }
+        }
+        System.out.println("Przed forem od result");
+        for (Map.Entry<Integer,Integer> entry : result.entrySet())
+        {
+            System.out.println(entry.getKey() + "/" + entry.getValue());
         }
 
         return result;

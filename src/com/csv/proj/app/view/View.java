@@ -6,7 +6,12 @@ import net.miginfocom.swing.*;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.print.PrinterException;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
@@ -19,7 +24,7 @@ import javax.swing.table.TableColumnModel;
 /**
  * Created by Łukasz on 2014-12-29.
  */
-public class View extends JFrame{
+public class View extends JFrame implements PropertyChangeListener{
 
 
     private Model model;
@@ -36,6 +41,7 @@ public class View extends JFrame{
     private JPanel operationContent = new JPanel();
     private JPanel resultPane = new JPanel();
     private JPanel operationBottom  = new JPanel();
+    private JPanel contentPane = new JPanel();
     private DefaultTableModel headermodel = new DefaultTableModel();
     private JCheckBox warunekchk = new JCheckBox();
     private JTextField jTextField;
@@ -43,20 +49,28 @@ public class View extends JFrame{
     private JTextField rangeT;
     private JLabel range;
     private Map<Integer,JTextField> textField = new HashMap<>();
-    private int count;
+    private int count=0;
     private String jTextFieldName;
     private int xgdid=5;
     private Vector fields = new Vector<>();
     private Map<String, JTextField> field = new HashMap<>();
     private int[] sum;
     private int sum_do;
+    private String filename;
+    private JFormattedTextField amountField;
+    private NumberFormat amountFormat;
+    private JMenuBar menuBar;
+    private JMenu menu, submenu;
+    private JMenuItem menuItem;
+    private List<Integer> sumList;
+    private Map<Integer,Integer> resultMap;
 
 
 
 
     public View(){
 
-        super("Magazyn");
+        super("Calculate CSV File");
 
 
     }
@@ -76,25 +90,124 @@ public class View extends JFrame{
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setVisible(true);
 
-        fireOpenEvent();
+        menuBar = new JMenuBar();
 
+        menu = new JMenu("File");
+        menu.setMnemonic(KeyEvent.VK_A);
+        menu.getAccessibleContext().setAccessibleDescription(
+                "The only menu in this program that has menu items");
+
+        menuItem = new JMenuItem("Open file",
+                KeyEvent.VK_T);
+
+        menuItem.getAccessibleContext().setAccessibleDescription(
+                "This doesn't really do anything");
+        menu.add(menuItem);
+
+        menuItem.addActionListener(e -> {
+            System.out.println("File Choose");
+            openFile(1);
+        });
+
+
+            menuBar.add(menu);
+            setJMenuBar(menuBar);
+            //fireOpenEvent();
+            openFile(0);
+        }
+
+
+    public void openFile(int flag){
+
+
+
+
+        if(flag==1) {
+
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+            int result = fileChooser.showOpenDialog(this);
+
+            remove(contentPane);
+            remove(operationTop);
+            remove(operationContent);
+            remove(resultPane);
+            remove(operationBottom);
+            remove(headerTable);
+            remove(scrollHeader);
+            remove(scrollOperation);
+            remove(scrollTop);
+
+
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                filename = selectedFile.getAbsolutePath();
+                System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+
+
+                remove(contentPane);
+                remove(operationTop);
+                remove(operationContent);
+                remove(resultPane);
+                remove(operationBottom);
+                remove(headerTable);
+                remove(scrollHeader);
+                remove(scrollOperation);
+                remove(scrollTop);
+
+                revalidate();
+                repaint();
+
+
+                fireOpenEvent(filename);
+
+                revalidate();
+                repaint();
+            }
+        }
+        if(flag==0) {
+
+            contentPane = new JPanel(new MigLayout("center",                 // Layout Constraints
+                    "center",             // Column constraints
+                    ""));
+            JButton file = new JButton("Open file");
+            JPanel buttonPanel = new JPanel(new MigLayout("", "[center, grow]"));
+            buttonPanel.add(file, "");
+            contentPane.add(buttonPanel, "dock south");
+            add(contentPane);
+
+            file.addActionListener(e -> {
+
+                System.out.println("File Choose");
+
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
+                int result = fileChooser.showOpenDialog(this);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    filename = selectedFile.getAbsolutePath();
+                    System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+
+                    fireOpenEvent(filename);
+                    remove(contentPane);
+                    revalidate();
+                    repaint();
+                }
+            });
+        }
     }
-
-
-
-
 
 
     public void loadHead(){
 
         header = model.getHead();
 
-        count = 1;
         int id=1;
         for(String head: header) {
             headermodel.addRow(new Object[]{id,head});
             id++;
             count++;
+            System.out.println("jestem w loadhead");
         }
         System.out.println("jestem w loadhead");
     }
@@ -112,13 +225,13 @@ public class View extends JFrame{
 
 
 
-    public void fireOpenEvent(){
+    public void fireOpenEvent(String filename){
 
         GridLayout gridLayout = new GridLayout(1,1);
 
         if(appListener!=null){
             //appListener.getFile();
-            appListener.getHeader();
+            appListener.getHeader(filename);
 
 
             headerTable = new JTable(headermodel);
@@ -164,24 +277,44 @@ public class View extends JFrame{
             range = new JLabel("Zakres wierszy: ");
             JLabel fi = new JLabel("do");
 
-            rangeF = new JTextField(5);
+
             rangeT = new JTextField(5);
 
+            rangeF = new JFormattedTextField(5);
+
+            amountField = new JFormattedTextField();
+            amountField.setColumns(10);
+            amountField.addPropertyChangeListener("value", this);
+
+
             operationTop.add(range);
-            operationTop.add(rangeF);
+            operationTop.add(amountField);
             operationTop.add(fi);
             operationTop.add(rangeT,"wrap");
+            resultPane.add(operationTop);
+
 
             boolean selected = checkBox.isSelected();
+            System.out.println("Liczba kolumn"+ count);
 
-            sum = new int[count];
+
+            sum = new int[1];
             sum_do = 0;
-
+            sumList = new ArrayList<>();
             headerTable.getModel().addTableModelListener(new TableModelListener() {
 
                 @Override
                 public void tableChanged(TableModelEvent e) {
-                    if(e.getColumn() >= 0  && e.getFirstRow()>-1){
+
+                    if(e.getColumn() == 3){
+                        int id =  (int)headerTable.getValueAt(e.getFirstRow(), 0);
+                        System.out.println("Wybieram kolumny do sumowania: " + id + count + sum_do);
+                      //  sum[sum_do] = id-1;
+                       // sum_do++;
+                        sumList.add(id-1);
+                    }
+
+                    if(e.getColumn() == 2  && e.getFirstRow()>-1){
                         int id =  e.getFirstRow();
                         int lp =  (int)headerTable.getValueAt(e.getFirstRow(), 0);
                         String colName = (String)headerTable.getValueAt(e.getFirstRow(), 1);
@@ -224,19 +357,17 @@ public class View extends JFrame{
 
                 System.out.println("Click Detected by Lambda Listner");
 
-                //wysyłam do kontrolera mape - textField
+                //wysyłam do kontrolera mape - textField oraz kolumny ktore maja byc sumowane
 
-                fireDataMapEvent(textField);
+                fireDataMapEvent(textField,sumList,1,22);
 
                 for (Map.Entry<Integer, JTextField> entry : textField.entrySet())
                 {
                     System.out.println(entry.getKey() + "/" + entry.getValue().getText());
-
-
-
                 }
 
             });
+
             resultPane.add(button);
 
             setLayout(gridLayout);
@@ -247,9 +378,19 @@ public class View extends JFrame{
         }
     }
 
-    public void fireDataMapEvent(Map<Integer,JTextField> textFieldEntry)
+    public void showResult(){
+
+        resultMap = model.getData();
+        for(Map.Entry<Integer,Integer> entry : resultMap.entrySet())
+        {
+            System.out.println(entry.getKey() + "ololol/" + entry.getValue());
+
+        }
+    }
+
+    public void fireDataMapEvent(Map<Integer,JTextField> textFieldEntry, List<Integer> sumList,int from,int to)
     {
-        viewListener.dataMap(textFieldEntry);
+        viewListener.dataMap(textFieldEntry,filename,sumList,from,to);
     }
 
     public void refreshPanel()
@@ -276,5 +417,9 @@ public class View extends JFrame{
     }
 
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+
+    }
 }
 

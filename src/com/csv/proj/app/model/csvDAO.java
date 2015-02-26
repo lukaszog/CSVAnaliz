@@ -23,6 +23,11 @@ public class csvDAO extends SwingWorker<Void, Void> {
     private String job;
     private String filename;
     private Map<Integer,JTextField> map = new HashMap<>();
+    private Map<Integer, Integer> results;
+    private List<Integer> sumList;
+    private int from;
+    private int RowCount=0;
+    private int to;
 
     public void setItself(Model model) {
         this.model = model;
@@ -33,11 +38,20 @@ public class csvDAO extends SwingWorker<Void, Void> {
     public void setView(View view) {
         this.view = view;
     }
+
     public void setMap(Map<Integer,JTextField> dataMap){
         this.map = dataMap;
     }
     public csvDAO(String filename){
         this.filename = filename;
+    }
+
+    public void setColumnToSum(List<Integer> sumList){
+        this.sumList = sumList;
+    }
+    public void setFromTo(int from, int to){
+        this.from = from;
+        this.to = to;
     }
 
 
@@ -69,11 +83,13 @@ public class csvDAO extends SwingWorker<Void, Void> {
 
         if(job.equals("showColumn")){
 
-          //  model.setData(csvfile);
+            model.setData(results);
             System.out.println("jestm w done - showColumn");
         }
         if(job.equals("filterColumn")){
             System.out.println("jestem w done - filterColumn");
+            model.setData(results);
+            view.showResult();
         }
         if(job.equals("header")) {
 
@@ -87,7 +103,7 @@ public class csvDAO extends SwingWorker<Void, Void> {
     }
     protected CSVFile getColumn() throws  IOException{
 
-        CSVReader ile = new CSVReader(new FileReader("WSTB.csv"),';');
+        CSVReader ile = new CSVReader(new FileReader(filename),';');
         System.out.println("Jestem w getColumn");
 
         int columnCount=0;
@@ -97,7 +113,7 @@ public class csvDAO extends SwingWorker<Void, Void> {
             columnCount = header.length;       // get the column count
         }
         System.out.println("Liczba kolumn: " + columnCount);
-        CSVReader reader1 = new CSVReader(new FileReader("WSTB.csv"), ';');
+        CSVReader reader1 = new CSVReader(new FileReader(filename), ';');
 
         List<String[]> records = reader1.readAll();
         Iterator<String[]> iterator = records.iterator();
@@ -113,6 +129,7 @@ public class csvDAO extends SwingWorker<Void, Void> {
             for(int i=0; i <columnCount-1; i++) {
 
                 toRow.add(record[i]);
+                RowCount++;
 
             }
             Row row = new Row(toRow);
@@ -131,15 +148,13 @@ public class csvDAO extends SwingWorker<Void, Void> {
             //columnsIds[i] = entry.getKey();
            // i++;
         }
+        System.out.println("Filename: " + filename + RowCount);
 
-        int[] columnsIds;
-        columnsIds = new int[10];
-        columnsIds[0]=7;
+        // cellMap.put(5,"14");
+        // csvfile.filter(1,4,cellMap); //zakres, filrt
 
-       // cellMap.put(5,"14");
-       // csvfile.filter(1,4,cellMap); //zakres, filrt
+        results = csvfile.calculate(2,30,cellMap,sumList);
 
-        csvfile.calculate(1,3000,cellMap,columnsIds);
         return csvfile;
     }
 
@@ -147,7 +162,7 @@ public class csvDAO extends SwingWorker<Void, Void> {
 
         List<String> head = new ArrayList<>();
 
-        CSVReader ile = new CSVReader(new FileReader("WSTB.csv"),';');
+        CSVReader ile = new CSVReader(new FileReader(filename),';');
 
         int columnCount=0;
         String[] header = ile.readNext(); // assuming first read
@@ -158,7 +173,7 @@ public class csvDAO extends SwingWorker<Void, Void> {
 
         System.out.println("Liczba kolumn: " + columnCount);
 
-        CSVReader reader1 = new CSVReader(new FileReader("WSTB.csv"), ';');
+        CSVReader reader1 = new CSVReader(new FileReader(filename), ';');
         List<String[]> records = reader1.readAll();
         Iterator<String[]> iterator = records.iterator();
 

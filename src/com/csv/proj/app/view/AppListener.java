@@ -6,7 +6,7 @@ package com.csv.proj.app.view;
 public interface AppListener {
 
     public void getFile();
-    public void getHeader();
+    public void getHeader(String filename);
     public void getColumnId(int column);
 
 }

@@ -29,6 +29,9 @@ public class Model{
         this.data = data;
     }
 
+    public Map<Integer,Integer> getData(){
+        return data;
+    }
 
     public List<String> getHead(){
         System.out.println("Jestem w getHead");
@@ -40,91 +43,29 @@ public class Model{
         return new ArrayList<>(column);
     }
 
-    public void loadHeader(View view){
+    public void loadHeader(View view,String filename){
 
         System.out.println("Jestem w Model.java -  loadHeader");
-        csvDAO csvDAO = new csvDAO();
+        csvDAO csvDAO = new csvDAO(filename);
         csvDAO.setItself(this);
         csvDAO.setJob("header");
         csvDAO.setView(view);
         csvDAO.execute();
 
     }
-    public void filterColumn(View view, Map<Integer,JTextField> dataMap){
+    public void filterColumn(View view, Map<Integer,JTextField> dataMap,String filename, List<Integer> sumList, int from, int to){
 
         System.out.println("Jestem w Model.java -  filterColumn");
-        csvDAO csvDAO = new csvDAO();
+        csvDAO csvDAO = new csvDAO(filename);
         csvDAO.setItself(this);
         csvDAO.setJob("filterColumn");
         csvDAO.setView(view);
         csvDAO.setMap(dataMap);
+        csvDAO.setColumnToSum(sumList);
+        csvDAO.setFromTo(from,to);
         csvDAO.execute();
 
     }
-    public void loadColumnId(View view, int column){
-
-        System.out.println("Jestem w Model.java -  loadColumnId");
-        csvDAO csvDAO = new csvDAO();
-        csvDAO.setItself(this);
-        csvDAO.setJob("showColumn");
-        csvDAO.setView(view);
-        csvDAO.execute();
-    }
-
-    public void  openFile(View view) throws IOException {
-
-        /*
-        CSVReader ile = new CSVReader(new FileReader("plik.csv"),';');
-
-
-
-        int columnCount=0;
-        String[] header = ile.readNext(); // assuming first read
-
-        if (header != null) {                     // and there is a (header) line
-            columnCount = header.length;       // get the column count
-        }
-
-        System.out.println("Liczba kolumn: " + columnCount);
-
-        CSVReader reader1 = new CSVReader(new FileReader("plik.csv"), ';');
-
-        List<String[]> records = reader1.readAll();
-        Iterator<String[]> iterator = records.iterator();
-
-        headers = getHeader(records); //nazwy kolumn
-
-
-        iterator.next();
-
-
-        while(iterator.hasNext()){
-
-            List<String> toRow = new ArrayList<>();
-            String[] record = iterator.next();
-
-            for(int i=0; i <columnCount-1; i++) {
-
-                   toRow.add(record[i]);
-
-            }
-            Row row = new Row(toRow);
-            toCSVFile.add(row);
-        }
-        CSVFile csvfile = new CSVFile(toCSVFile,headers);
-
-        Iterator<String> headerIterator = headers.iterator();
-
-        while(headerIterator.hasNext())
-        {
-            System.out.println(headerIterator.next());
-        }
-
-        cellMap.put(5,"14"); //numer kolumny, wartosc
-        csvfile.filter(1,4,cellMap); //zakres, filrt
-        */
-     }
-
     public static List<String> getHeader(List<String[]> records){
 
         String[] firstRow = records.get(0);
