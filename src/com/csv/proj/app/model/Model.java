@@ -14,7 +14,7 @@ import java.util.*;
 public class Model{
 
     private List<Row> toCSVFile = new LinkedList<>();
-    private Map<Integer,String> cellMap = new HashMap<>();
+    private Map<Integer,String> dataRow = new HashMap<>();
     private List<String> headers = new LinkedList<>();
     private List<String> column = new LinkedList<>();
     private Map<Integer, Integer> data = new HashMap<>();
@@ -29,6 +29,15 @@ public class Model{
         this.data = data;
     }
 
+    public void setDataColumn(Map<Integer,String> dataRow){
+
+        this.dataRow = dataRow;
+    }
+
+    public Map<Integer,String> getDataColumn(){
+        return dataRow;
+    }
+
     public Map<Integer,Integer> getData(){
         return data;
     }
@@ -37,6 +46,8 @@ public class Model{
         System.out.println("Jestem w getHead");
         return new ArrayList<>(headers);
     }
+
+
 
     public List<String> getColumn(){
         System.out.println("Jestem w getColumn");
@@ -53,7 +64,16 @@ public class Model{
         csvDAO.execute();
 
     }
-    public void filterColumn(View view, Map<Integer,JTextField> dataMap,String filename, List<Integer> sumList, int from, int to){
+    public void loadData(View view,String filename){
+
+        csvDAO csvDAO = new csvDAO(filename);
+        csvDAO.setItself(this);
+        csvDAO.setJob("getData");
+        csvDAO.setView(view);
+        csvDAO.execute();
+
+    }
+    public void filterColumn(View view, Map<Integer,JTextField> dataMap,String filename, Map<Integer,Integer> sumList, int from, int to){
 
         System.out.println("Jestem w Model.java -  filterColumn");
         csvDAO csvDAO = new csvDAO(filename);

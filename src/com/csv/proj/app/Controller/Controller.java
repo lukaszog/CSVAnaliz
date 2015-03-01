@@ -46,7 +46,7 @@ public class Controller implements AppListener,ViewListener {
         }
     }
 
-    public void dataMap(Map<Integer,JTextField> jTextFieldMap, String filename, List<Integer> sumList, int from, int to){
+    public void dataMap(Map<Integer,JTextField> jTextFieldMap, String filename, Map<Integer,Integer> sumList, int from, int to){
         try{
             System.out.println("Jestem w dataMap");
             model.filterColumn(view,jTextFieldMap, filename, sumList, from, to);
@@ -63,7 +63,14 @@ public class Controller implements AppListener,ViewListener {
             e.printStackTrace();
         }
     }
-
+    public void getData(String filename){
+        try{
+            model.loadData(view,filename);
+           // System.out.println("Kontroler: getHeader");
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
     public void getColumnId(int column){
         try{
           //  model.loadColumnId(view,column);

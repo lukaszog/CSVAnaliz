@@ -21,12 +21,30 @@ public class CSVFile {
         //TODO sprawdzic poprawnosc pliku
     }
 
+    public Map<Integer,String> getData(){
+
+        List<Row> dataList = new LinkedList<>();
+        Map<Integer,String> dataMap = new HashMap<>();
+
+        System.out.println(row.size());
+        int ids=0;
+        for(Row r : row) {
+            List<String> rowData = r.getList();
+
+            for(String s : rowData){
+                dataMap.put(ids,s);
+                ids++;
+            }
+        }
+        return dataMap;
+    }
+
     public List<Row> filter(int startRow, int endRow, Map<Integer, String> constraint)
     {
 
         System.out.println(row.size());
         // List<Row> fromRange = row;
-        List<Row> fromRange = row.subList(startRow-2,endRow);
+        List<Row> fromRange = row.subList(startRow,endRow+1);
         List<Row> filtered = new LinkedList<>();
 
         for(Row r: fromRange) {
@@ -48,7 +66,7 @@ public class CSVFile {
         return filtered;
     }
 
-    public Map<Integer, Integer> calculate(int startRow, int endRow, Map<Integer, String> cellMap, List<Integer> columnsIds) {
+    public Map<Integer, Integer> calculate(int startRow, int endRow, Map<Integer, String> cellMap, Map<Integer,Integer> columnsIds) {
 
 
         Map<Integer,Integer> result = new HashMap<>();
@@ -58,19 +76,19 @@ public class CSVFile {
         System.out.println("jestem w calculate");
 
 
-        for(int columnId: columnsIds)
+        for (Map.Entry<Integer,Integer> entry : columnsIds.entrySet())
         {
-            result.put(columnId,0);
+            result.put(entry.getKey(),0);
         }
 
         for(Row row: filteredRows)
         {
-            for(int columnId: columnsIds)
+            for (Map.Entry<Integer,Integer> entry : columnsIds.entrySet())
             {
-                int sumforColumn=result.get(columnId);
-                sumforColumn+=row.getCellInt(columnId);
-                result.put(columnId,sumforColumn);
-                System.out.println("licze" +"ID: "+columnId + "value: " +  sumforColumn);
+                int sumforColumn=result.get(entry.getKey());
+                sumforColumn+=row.getCellInt(entry.getKey());
+                result.put(entry.getKey(),sumforColumn);
+                System.out.println("licze" +"ID: "+entry.getKey() + "value: " +  sumforColumn);
             }
         }
         System.out.println("Przed forem od result");

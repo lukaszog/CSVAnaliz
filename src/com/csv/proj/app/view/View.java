@@ -37,7 +37,9 @@ public class View extends JFrame implements PropertyChangeListener{
     private JScrollPane scrollHeader = new JScrollPane();
     private JScrollPane scrollOperation = new JScrollPane();
     private JScrollPane scrollTop = new JScrollPane();
+    private JScrollPane scrollResult = new JScrollPane();
     private JPanel operationTop = new JPanel();
+    private JPanel resultPanel = new JPanel();
     private JPanel operationContent = new JPanel();
     private JPanel resultPane = new JPanel();
     private JPanel operationBottom  = new JPanel();
@@ -45,8 +47,6 @@ public class View extends JFrame implements PropertyChangeListener{
     private DefaultTableModel headermodel = new DefaultTableModel();
     private JCheckBox warunekchk = new JCheckBox();
     private JTextField jTextField;
-    private JTextField rangeF;
-    private JTextField rangeT;
     private JLabel range;
     private Map<Integer,JTextField> textField = new HashMap<>();
     private int count=0;
@@ -57,33 +57,31 @@ public class View extends JFrame implements PropertyChangeListener{
     private int[] sum;
     private int sum_do;
     private String filename;
-    private JFormattedTextField amountField;
+    private JFormattedTextField rangeF;
+    private JFormattedTextField rangeT;
+    private JFormattedTextField numPeriodsField;
     private NumberFormat amountFormat;
     private JMenuBar menuBar;
     private JMenu menu, submenu;
     private JMenuItem menuItem;
-    private List<Integer> sumList;
+    private Map<Integer,Integer> sumList;
     private Map<Integer,Integer> resultMap;
-
-
-
+    private Map<Integer,String> headerMap = new HashMap<>();
+    private Map<Integer,String> dataMap = new HashMap<>();
+    private JComboBox dataCombo = new JComboBox();
+    private JComboBox dataComboTo = new JComboBox();
+    private int dataFrom;
+    private int dataTo;
 
     public View(){
-
         super("Calculate CSV File");
-
-
     }
 
     public void setModel(Model model) {
-
         this.model = model;
-
     }
 
     public void initializeView() {
-
-
         pack();
         setSize(1000, 700);
         setLocationRelativeTo(null);
@@ -118,9 +116,6 @@ public class View extends JFrame implements PropertyChangeListener{
 
 
     public void openFile(int flag){
-
-
-
 
         if(flag==1) {
 
@@ -202,28 +197,28 @@ public class View extends JFrame implements PropertyChangeListener{
 
         header = model.getHead();
 
+        int ids=0;
         int id=1;
+
         for(String head: header) {
             headermodel.addRow(new Object[]{id,head});
+            headerMap.put(ids,head);
             id++;
+            ids++;
             count++;
-            System.out.println("jestem w loadhead");
-        }
-        System.out.println("jestem w loadhead");
+         }
     }
 
-    public void loadColumn(){
+    public void loadDataColumn(){
 
-        column = model.getColumn();
+        dataMap = model.getDataColumn();
 
-        for(String col:column){
-            System.out.println(new Object[]{col});
+        for(Map.Entry<Integer,String> entry : dataMap.entrySet()){
+
+            dataCombo.addItem(new Item(entry.getKey(),entry.getValue()));
+            dataComboTo.addItem(new Item(entry.getKey(),entry.getValue()));
         }
-        System.out.println("jestem w loadColumn");
-
     }
-
-
 
     public void fireOpenEvent(String filename){
 
@@ -232,6 +227,7 @@ public class View extends JFrame implements PropertyChangeListener{
         if(appListener!=null){
             //appListener.getFile();
             appListener.getHeader(filename);
+            appListener.getData(filename);
 
 
             headerTable = new JTable(headermodel);
@@ -270,7 +266,7 @@ public class View extends JFrame implements PropertyChangeListener{
             operationContent.setBorder(new TitledBorder("Operacje"));
             resultPane.setBorder(new TitledBorder("Finalizuj"));
 
-            operationTop.setLayout(new MigLayout("left left, , gapy 2"));
+            operationTop.setLayout(new MigLayout("left left,wrap , gapy 2"));
             operationContent.setLayout(new MigLayout("left left, , gapy 2"));
             operationBottom.setLayout(new MigLayout("left left, wrap, gapy 112"));
 
@@ -278,40 +274,64 @@ public class View extends JFrame implements PropertyChangeListener{
             JLabel fi = new JLabel("do");
 
 
-            rangeT = new JTextField(5);
+            rangeT = new JFormattedTextField(amountFormat);
+            rangeF = new JFormattedTextField(amountFormat);
 
-            rangeF = new JFormattedTextField(5);
-
-            amountField = new JFormattedTextField();
-            amountField.setColumns(10);
-            amountField.addPropertyChangeListener("value", this);
+            rangeT.setColumns(5);
+            rangeF.setColumns(5);
 
 
-            operationTop.add(range);
-            operationTop.add(amountField);
+            numPeriodsField = new JFormattedTextField();
+            numPeriodsField.setValue(new Integer(3));
+            numPeriodsField.setColumns(10);
+            numPeriodsField.addPropertyChangeListener("value", this);
+
+
+
+            rangeT.addPropertyChangeListener("value", this);
+            rangeF.addPropertyChangeListener("value", this);
+
+
+            operationTop.add(dataCombo);
             operationTop.add(fi);
-            operationTop.add(rangeT,"wrap");
+            operationTop.add(dataComboTo);
             resultPane.add(operationTop);
 
-
-            boolean selected = checkBox.isSelected();
             System.out.println("Liczba kolumn"+ count);
+
+            dataCombo.addActionListener(e->{
+
+                Item selected_item_from = (Item) dataCombo.getSelectedItem();
+                dataFrom = selected_item_from.getId();
+            });
+
+            dataComboTo.addActionListener(e->{
+                Item selected_item_to = (Item) dataComboTo.getSelectedItem();
+                dataTo = selected_item_to.getId();
+            });
+
+
 
 
             sum = new int[1];
             sum_do = 0;
-            sumList = new ArrayList<>();
+            sumList = new HashMap<>();
             headerTable.getModel().addTableModelListener(new TableModelListener() {
 
                 @Override
                 public void tableChanged(TableModelEvent e) {
 
-                    if(e.getColumn() == 3){
-                        int id =  (int)headerTable.getValueAt(e.getFirstRow(), 0);
-                        System.out.println("Wybieram kolumny do sumowania: " + id + count + sum_do);
-                      //  sum[sum_do] = id-1;
-                       // sum_do++;
-                        sumList.add(id-1);
+                    if(e.getColumn() == 3) {
+                        boolean colValue_s = (boolean) headerTable.getValueAt(e.getFirstRow(), 3);
+                        int id_s = (int) headerTable.getValueAt(e.getFirstRow(), 0);
+                        if (colValue_s) {
+                            System.out.println("Wybieram kolumny do sumowania: " + id_s + count + sum_do);
+                            //  sum[sum_do] = id-1;
+                            // sum_do++;
+                            sumList.put(id_s - 1, id_s - 1);
+                        } else {
+                            sumList.remove(id_s - 1);
+                        }
                     }
 
                     if(e.getColumn() == 2  && e.getFirstRow()>-1){
@@ -352,20 +372,9 @@ public class View extends JFrame implements PropertyChangeListener{
                 }
             });
 
-            JButton button = new JButton("Click Me!");
+            JButton button = new JButton("Calculate");
             button.addActionListener(e -> {
-
-                System.out.println("Click Detected by Lambda Listner");
-
-                //wysyłam do kontrolera mape - textField oraz kolumny ktore maja byc sumowane
-
-                fireDataMapEvent(textField,sumList,1,22);
-
-                for (Map.Entry<Integer, JTextField> entry : textField.entrySet())
-                {
-                    System.out.println(entry.getKey() + "/" + entry.getValue().getText());
-                }
-
+                fireDataMapEvent(textField,sumList,dataFrom,dataTo);
             });
 
             resultPane.add(button);
@@ -381,14 +390,55 @@ public class View extends JFrame implements PropertyChangeListener{
     public void showResult(){
 
         resultMap = model.getData();
-        for(Map.Entry<Integer,Integer> entry : resultMap.entrySet())
+
+        final JFrame newpopup = new JFrame("Results");
+        newpopup.setSize(500, 280);
+        newpopup.setLocationRelativeTo(null);
+        newpopup.setResizable(false);
+        newpopup.setVisible(true);
+
+        resultPane = new JPanel();
+
+        resultPane.setLayout(new MigLayout());
+
+        final JButton pdfButton = new JButton("Generate PDF");
+
+        for(Map.Entry<Integer,String> entry : headerMap.entrySet())
         {
-            System.out.println(entry.getKey() + "ololol/" + entry.getValue());
+            //System.out.println(entry.getKey() + "headerMap/" + entry.getValue());
+
+            for(Map.Entry<Integer,Integer> res : resultMap.entrySet())
+            {
+                if(entry.getKey() == res.getKey())
+                {
+                    System.out.println(entry.getValue() + "wynik/" + res.getValue());
+
+                    JLabel fi = new JLabel(entry.getValue() + ": " + res.getValue());
+                    resultPane.add(fi,"wrap");
+
+
+                }
+
+            }
 
         }
+        newpopup.add(pdfButton);
+
+        pdfButton.addActionListener(e->{
+
+
+
+
+        });
+
+
+        newpopup.add(resultPane);
+
+
+
     }
 
-    public void fireDataMapEvent(Map<Integer,JTextField> textFieldEntry, List<Integer> sumList,int from,int to)
+    public void fireDataMapEvent(Map<Integer,JTextField> textFieldEntry, Map<Integer,Integer> sumList,int from,int to)
     {
         viewListener.dataMap(textFieldEntry,filename,sumList,from,to);
     }

@@ -9,6 +9,6 @@ import java.util.Map;
  */
 public interface ViewListener {
 
-    public void dataMap(Map<Integer,JTextField> textFieldEntry, String filename, List<Integer> sumList, int from, int to);
+    public void dataMap(Map<Integer,JTextField> textFieldEntry, String filename, Map<Integer,Integer> sumList, int from, int to);
 
 }

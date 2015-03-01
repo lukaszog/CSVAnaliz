@@ -18,13 +18,15 @@ public class csvDAO extends SwingWorker<Void, Void> {
     private List<String> headers;
     private Map<Integer,String> column;
     private List<Row> toCSVFile = new LinkedList<>();
+    private List<Row> DatatoCSVFile = new LinkedList<>();
     private Map<Integer,String> cellMap = new HashMap<>();
     private CSVFile csvfile;
     private String job;
     private String filename;
     private Map<Integer,JTextField> map = new HashMap<>();
     private Map<Integer, Integer> results;
-    private List<Integer> sumList;
+    private Map<Integer,Integer> sumList;
+    private Map<Integer,String> dataRow;
     private int from;
     private int RowCount=0;
     private int to;
@@ -46,7 +48,7 @@ public class csvDAO extends SwingWorker<Void, Void> {
         this.filename = filename;
     }
 
-    public void setColumnToSum(List<Integer> sumList){
+    public void setColumnToSum(Map<Integer,Integer> sumList){
         this.sumList = sumList;
     }
     public void setFromTo(int from, int to){
@@ -72,6 +74,9 @@ public class csvDAO extends SwingWorker<Void, Void> {
             System.out.println("Jestem w filterColumn");
             csvfile = getColumn();
         }
+        if(job.equals("getData")){
+            getData();
+        }
 
         return null;
     }
@@ -96,15 +101,72 @@ public class csvDAO extends SwingWorker<Void, Void> {
             model.setHead(headers);
             view.loadHead();
             System.out.println("jestm w done - header");
-
+        }
+        if(job.equals("getData")){
+            System.out.println("Jestem w getData");
+            model.setDataColumn(dataRow);
+            view.loadDataColumn();
 
         }
+
+    }
+
+    protected Map<Integer, String> getData() throws  IOException{
+
+        CSVReader ile = new CSVReader(new FileReader(filename),';');
+        System.out.println("Jestem w getColumn");
+
+        int columnCount=0;
+        String[] header = ile.readNext(); // assuming first read
+
+        if (header != null) {                     // and there is a (header) line
+            columnCount = header.length;       // get the column count
+        }
+        System.out.println("Liczba kolumn: " + columnCount);
+        CSVReader reader1 = new CSVReader(new FileReader(filename), ';');
+
+        List<String[]> records = reader1.readAll();
+        Iterator<String[]> iterator = records.iterator();
+
+        headers = getHeader(records); //nazwy kolumn
+        iterator.next();
+
+        toCSVFile.clear();
+        while(iterator.hasNext()){
+
+            List<String> toRow = new ArrayList<>();
+            String[] record = iterator.next();
+            int ids=0;
+
+                for (int i = 0; i < 2; i += 2) {
+
+                    toRow.add(record[i] + " - " + record[i + 1]);
+                    ids++;
+                    //System.out.println(record[i] + " leci data " + record[i + 1] + " koniec wiersza, iteracja nr: "+i);
+
+                }
+                Row row = new Row(toRow);
+                DatatoCSVFile.add(row);
+        }
+            csvfile = new CSVFile(DatatoCSVFile,null);
+
+        dataRow = csvfile.getData();
+
+        //dataRow.put(2323,"costam csasdasdjoasijdoasj");
+
+        for(Map.Entry<Integer,String> entry : dataRow.entrySet()){
+            System.out.println(entry.getValue());
+        }
+
+        return dataRow;
 
     }
     protected CSVFile getColumn() throws  IOException{
 
         CSVReader ile = new CSVReader(new FileReader(filename),';');
         System.out.println("Jestem w getColumn");
+
+        Map<Integer,String> dataRow = new HashMap<>();
 
         int columnCount=0;
         String[] header = ile.readNext(); // assuming first read
@@ -132,30 +194,24 @@ public class csvDAO extends SwingWorker<Void, Void> {
                 RowCount++;
 
             }
+
             Row row = new Row(toRow);
             toCSVFile.add(row);
         }
         csvfile = new CSVFile(toCSVFile,headers);
 
-        Iterator<String> headerIterator = headers.iterator();
-
         int i=0;
         cellMap.clear();
         for (Map.Entry<Integer, JTextField> entry : map.entrySet())
         {
-            System.out.println(entry.getKey() + "/" + entry.getValue().getText());
              cellMap.put(entry.getKey(),entry.getValue().getText()); //numer kolumny, wartosc
-            //columnsIds[i] = entry.getKey();
-           // i++;
         }
         System.out.println("Filename: " + filename + RowCount);
 
-        // cellMap.put(5,"14");
-        // csvfile.filter(1,4,cellMap); //zakres, filrt
-
-        results = csvfile.calculate(2,30,cellMap,sumList);
+        results = csvfile.calculate(from,to,cellMap,sumList);
 
         return csvfile;
+
     }
 
     protected List<String> getHeaders() throws IOException{
