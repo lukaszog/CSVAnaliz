@@ -7,6 +7,7 @@ import net.miginfocom.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 import java.awt.print.PrinterException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -397,11 +398,11 @@ public class View extends JFrame implements PropertyChangeListener{
         newpopup.setResizable(false);
         newpopup.setVisible(true);
 
-        resultPane = new JPanel();
+        resultPane = new JPanel(new MigLayout("left",                 // Layout Constraints
+                "left",             // Column constraints
+                ""));
 
-        resultPane.setLayout(new MigLayout());
 
-        final JButton pdfButton = new JButton("Generate PDF");
 
         for(Map.Entry<Integer,String> entry : headerMap.entrySet())
         {
@@ -411,7 +412,7 @@ public class View extends JFrame implements PropertyChangeListener{
             {
                 if(entry.getKey() == res.getKey())
                 {
-                    System.out.println(entry.getValue() + "wynik/" + res.getValue());
+                   // System.out.println(entry.getValue() + "wynik/" + res.getValue());
 
                     JLabel fi = new JLabel(entry.getValue() + ": " + res.getValue());
                     resultPane.add(fi,"wrap");
@@ -422,17 +423,33 @@ public class View extends JFrame implements PropertyChangeListener{
             }
 
         }
-        newpopup.add(pdfButton);
-
-        pdfButton.addActionListener(e->{
 
 
+        JButton pdfButton = new JButton("Generate PDF");
+        JButton okButton = new JButton("OK");
+        JPanel buttonPanel = new JPanel(new MigLayout(
+                "center",                 // Layout Constraints
+                "[][]",             // Column constraints
+                "[][][]:push[]"));
 
+        buttonPanel.add(pdfButton, "center");
+        buttonPanel.add(okButton,"center");
+        resultPane.add(buttonPanel, "center, grow, pushy, wrap push");
+
+        pdfButton.addActionListener(e -> {
+
+            PDF pdf = new PDF();
+            pdf.execute();
 
         });
 
+        okButton.addActionListener(e->{
+           newpopup.dispatchEvent(new WindowEvent(newpopup,WindowEvent.WINDOW_CLOSING));
+        });
 
-        newpopup.add(resultPane);
+
+        scrollResult = new JScrollPane(resultPane);
+        newpopup.add(scrollResult);
 
 
 
