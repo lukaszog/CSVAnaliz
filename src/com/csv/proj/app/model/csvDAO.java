@@ -154,9 +154,6 @@ public class csvDAO extends SwingWorker<Void, Void> {
 
         //dataRow.put(2323,"costam csasdasdjoasijdoasj");
 
-        for(Map.Entry<Integer,String> entry : dataRow.entrySet()){
-            System.out.println(entry.getValue());
-        }
 
         return dataRow;
 

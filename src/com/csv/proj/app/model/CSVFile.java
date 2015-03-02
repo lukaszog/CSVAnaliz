@@ -54,14 +54,12 @@ public class CSVFile {
             }
         }
 
-        for(Row r : filtered) {
+       /* for(Row r : filtered) {
             List<String> rowData = r.getList();
 
             for(String s : rowData){
-                System.out.print(s + ", ");
             }
-            System.out.print("koniec wiersza\n");
-        }
+        }*/
 
         return filtered;
     }
@@ -72,9 +70,6 @@ public class CSVFile {
         Map<Integer,Integer> result = new HashMap<>();
         List<Row> filteredRows = filter(startRow,endRow,cellMap);
         //tutaj liczymy
-
-        System.out.println("jestem w calculate");
-
 
         for (Map.Entry<Integer,Integer> entry : columnsIds.entrySet())
         {
@@ -88,14 +83,9 @@ public class CSVFile {
                 int sumforColumn=result.get(entry.getKey());
                 sumforColumn+=row.getCellInt(entry.getKey());
                 result.put(entry.getKey(),sumforColumn);
-                System.out.println("licze" +"ID: "+entry.getKey() + "value: " +  sumforColumn);
             }
         }
-        System.out.println("Przed forem od result");
-        for (Map.Entry<Integer,Integer> entry : result.entrySet())
-        {
-            System.out.println(entry.getKey() + "/" + entry.getValue());
-        }
+
 
         return result;
     }

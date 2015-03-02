@@ -1,6 +1,8 @@
 package com.csv.proj.app.view;
 
 import com.csv.proj.app.model.*;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.pdf.PdfWriter;
 import javafx.event.ActionEvent;
 import net.miginfocom.swing.*;
 
@@ -12,6 +14,7 @@ import java.awt.print.PrinterException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
@@ -29,6 +32,7 @@ public class View extends JFrame implements PropertyChangeListener{
 
 
     private Model model;
+    private View view;
     private AppListener appListener;
     private ViewListener viewListener;
     private List<String> header;
@@ -73,9 +77,13 @@ public class View extends JFrame implements PropertyChangeListener{
     private JComboBox dataComboTo = new JComboBox();
     private int dataFrom;
     private int dataTo;
+    private JTextField filename_pdf = new JTextField(), dir = new JTextField();
+    private String file;
+
 
     public View(){
         super("Calculate CSV File");
+
     }
 
     public void setModel(Model model) {
@@ -263,16 +271,17 @@ public class View extends JFrame implements PropertyChangeListener{
             tcm.getColumn(3).setCellEditor(new DefaultCellEditor(new JCheckBox()));
 
 
-            scrollHeader.setBorder(new TitledBorder("Nazwy kolumn"));
-            operationContent.setBorder(new TitledBorder("Operacje"));
-            resultPane.setBorder(new TitledBorder("Finalizuj"));
+            scrollHeader.setBorder(new TitledBorder("Column names"));
+            operationContent.setBorder(new TitledBorder("Constraint"));
+            resultPane.setBorder(new TitledBorder("Final"));
 
             operationTop.setLayout(new MigLayout("left left,wrap , gapy 2"));
             operationContent.setLayout(new MigLayout("left left, , gapy 2"));
             operationBottom.setLayout(new MigLayout("left left, wrap, gapy 112"));
 
-            range = new JLabel("Zakres wierszy: ");
-            JLabel fi = new JLabel("do");
+            range = new JLabel("Range: ");
+            JLabel from = new JLabel("From:");
+            JLabel fi = new JLabel("to:");
 
 
             rangeT = new JFormattedTextField(amountFormat);
@@ -292,7 +301,8 @@ public class View extends JFrame implements PropertyChangeListener{
             rangeT.addPropertyChangeListener("value", this);
             rangeF.addPropertyChangeListener("value", this);
 
-
+            operationTop.add(range);
+            operationTop.add(from);
             operationTop.add(dataCombo);
             operationTop.add(fi);
             operationTop.add(dataComboTo);
@@ -392,6 +402,13 @@ public class View extends JFrame implements PropertyChangeListener{
 
         resultMap = model.getData();
 
+        if(resultMap.isEmpty()){
+
+            JOptionPane.showMessageDialog(View.this,
+                    "No data!", "Error",
+                    JOptionPane.WARNING_MESSAGE);
+
+        }else {
         final JFrame newpopup = new JFrame("Results");
         newpopup.setSize(500, 280);
         newpopup.setLocationRelativeTo(null);
@@ -401,56 +418,89 @@ public class View extends JFrame implements PropertyChangeListener{
         resultPane = new JPanel(new MigLayout("left",                 // Layout Constraints
                 "left",             // Column constraints
                 ""));
+            for (Map.Entry<Integer, String> entry : headerMap.entrySet()) {
 
+                for (Map.Entry<Integer, Integer> res : resultMap.entrySet()) {
+                    if (entry.getKey() == res.getKey()) {
 
+                        JLabel fi = new JLabel(entry.getValue() + ": " + res.getValue());
+                        resultPane.add(fi, "wrap");
 
-        for(Map.Entry<Integer,String> entry : headerMap.entrySet())
-        {
-            //System.out.println(entry.getKey() + "headerMap/" + entry.getValue());
-
-            for(Map.Entry<Integer,Integer> res : resultMap.entrySet())
-            {
-                if(entry.getKey() == res.getKey())
-                {
-                   // System.out.println(entry.getValue() + "wynik/" + res.getValue());
-
-                    JLabel fi = new JLabel(entry.getValue() + ": " + res.getValue());
-                    resultPane.add(fi,"wrap");
-
+                    }
 
                 }
 
             }
 
+            JButton pdfButton = new JButton("Generate PDF");
+            JButton okButton = new JButton("OK");
+            JPanel buttonPanel = new JPanel(new MigLayout(
+                    "center",                 // Layout Constraints
+                    "[][]",             // Column constraints
+                    "[][][]:push[]"));
+
+            buttonPanel.add(pdfButton, "center");
+            buttonPanel.add(okButton, "center");
+            resultPane.add(buttonPanel, "center, grow, pushy, wrap push");
+
+            pdfButton.addActionListener(e -> {
+
+
+                PDF pdf = new PDF();
+                pdf.setView(view);
+                pdf.setHeaderMap(headerMap);
+                pdf.setResultMap(resultMap);
+
+
+                JFileChooser c = new JFileChooser();
+                // Demonstrate "Save" dialog:
+                int rVal = c.showSaveDialog(View.this);
+                if (rVal == JFileChooser.APPROVE_OPTION) {
+                    filename_pdf.setText(c.getSelectedFile().getName());
+                    System.out.println(c.getSelectedFile().getName());
+                    System.out.println(c.getCurrentDirectory().toString());
+                    dir.setText(c.getCurrentDirectory().toString());
+                    // StringBuilder sb = new StringBuilder();
+                    //  sb.append(c.getCurrentDirectory().toString());
+                    //  sb.append("/");
+
+                    file = c.getCurrentDirectory().toString() + "\\" + c.getSelectedFile().getName() + ".pdf";
+                    System.out.println(file);
+                }
+
+                if (rVal == JFileChooser.CANCEL_OPTION) {
+                    filename_pdf.setText("You pressed cancel");
+                    dir.setText("");
+                }
+
+                try {
+                    Document document = new Document();
+                    PdfWriter.getInstance(document, new FileOutputStream(file));
+                    document.open();
+                    pdf.addMetaData(document);
+                    pdf.addTitlePage(document);
+                    pdf.addContent(document);
+                    document.close();
+                    JOptionPane.showMessageDialog(View.this,
+                            "The file has been saved",
+                            "Information", JOptionPane.INFORMATION_MESSAGE);
+
+
+                } catch (Exception error) {
+                    JOptionPane.showMessageDialog(View.this,
+                            "PDF create error, choose other path",
+                            "Error", JOptionPane.WARNING_MESSAGE);
+                }
+            });
+
+            okButton.addActionListener(e -> {
+                newpopup.dispatchEvent(new WindowEvent(newpopup, WindowEvent.WINDOW_CLOSING));
+            });
+
+
+            scrollResult = new JScrollPane(resultPane);
+            newpopup.add(scrollResult);
         }
-
-
-        JButton pdfButton = new JButton("Generate PDF");
-        JButton okButton = new JButton("OK");
-        JPanel buttonPanel = new JPanel(new MigLayout(
-                "center",                 // Layout Constraints
-                "[][]",             // Column constraints
-                "[][][]:push[]"));
-
-        buttonPanel.add(pdfButton, "center");
-        buttonPanel.add(okButton,"center");
-        resultPane.add(buttonPanel, "center, grow, pushy, wrap push");
-
-        pdfButton.addActionListener(e -> {
-
-            PDF pdf = new PDF();
-            pdf.execute();
-
-        });
-
-        okButton.addActionListener(e->{
-           newpopup.dispatchEvent(new WindowEvent(newpopup,WindowEvent.WINDOW_CLOSING));
-        });
-
-
-        scrollResult = new JScrollPane(resultPane);
-        newpopup.add(scrollResult);
-
 
 
     }
