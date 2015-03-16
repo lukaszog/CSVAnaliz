@@ -25,5 +25,8 @@
         <module name="CSVAnaliz" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="CSVAnaliz" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

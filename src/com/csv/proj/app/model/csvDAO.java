@@ -75,7 +75,7 @@ public class csvDAO extends SwingWorker<Void, Void> {
             csvfile = getColumn();
         }
         if(job.equals("getData")){
-            getData();
+             getData();
         }
 
         return null;

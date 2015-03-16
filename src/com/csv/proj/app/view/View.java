@@ -8,20 +8,25 @@ import net.miginfocom.swing.*;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.awt.print.PrinterException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 
@@ -79,11 +84,16 @@ public class View extends JFrame implements PropertyChangeListener{
     private int dataTo;
     private JTextField filename_pdf = new JTextField(), dir = new JTextField();
     private String file;
+    private  BufferedImage image = null;
+    private JLabel from;
+    private JLabel fi;
+    private JButton button;
+    private int itemDataComboCount;
 
 
     public View(){
         super("Calculate CSV File");
-
+         setVisible(true);
     }
 
     public void setModel(Model model) {
@@ -121,7 +131,9 @@ public class View extends JFrame implements PropertyChangeListener{
             setJMenuBar(menuBar);
             //fireOpenEvent();
             openFile(0);
-        }
+
+        System.out.println("Otwieram!!!!!!!!!!!!!!!");
+    }
 
 
     public void openFile(int flag){
@@ -131,6 +143,9 @@ public class View extends JFrame implements PropertyChangeListener{
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
             int result = fileChooser.showOpenDialog(this);
+
+            dataMap.clear();
+
 
             remove(contentPane);
             remove(operationTop);
@@ -142,26 +157,25 @@ public class View extends JFrame implements PropertyChangeListener{
             remove(scrollOperation);
             remove(scrollTop);
 
+            operationTop.remove(fi);
+            operationTop.remove(from);
+
+            resultPane.remove(button);
+
+            revalidate();
+            repaint();
 
             if (result == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fileChooser.getSelectedFile();
                 filename = selectedFile.getAbsolutePath();
-                System.out.println("Selected file: " + selectedFile.getAbsolutePath());
+                System.out.println("Selected file22222: " + selectedFile.getAbsolutePath());
 
-
-                remove(contentPane);
-                remove(operationTop);
-                remove(operationContent);
-                remove(resultPane);
-                remove(operationBottom);
-                remove(headerTable);
-                remove(scrollHeader);
-                remove(scrollOperation);
-                remove(scrollTop);
-
-                revalidate();
-                repaint();
-
+                if (headermodel.getRowCount() > 0) {
+                    for (int i = headermodel.getRowCount() - 1; i > -1; i--) {
+                        headermodel.removeRow(i);
+                    }
+                   headermodel.setColumnCount(0);
+                }
 
                 fireOpenEvent(filename);
 
@@ -178,11 +192,12 @@ public class View extends JFrame implements PropertyChangeListener{
             JPanel buttonPanel = new JPanel(new MigLayout("", "[center, grow]"));
             buttonPanel.add(file, "");
             contentPane.add(buttonPanel, "dock south");
+            //contentPane.setBackground(new Color(255,123,61));
+           // buttonPanel.setBackground(new Color(255,123,61));
+
             add(contentPane);
 
             file.addActionListener(e -> {
-
-                System.out.println("File Choose");
 
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -204,6 +219,7 @@ public class View extends JFrame implements PropertyChangeListener{
 
     public void loadHead(){
 
+
         header = model.getHead();
 
         int ids=0;
@@ -216,22 +232,45 @@ public class View extends JFrame implements PropertyChangeListener{
             ids++;
             count++;
          }
+        header.clear();
+
     }
 
     public void loadDataColumn(){
 
+
+        revalidate();
+        repaint();
+
         dataMap = model.getDataColumn();
+        System.out.println("Combosize" + itemDataComboCount);
+
+        dataCombo.removeAllItems();
+        dataComboTo.removeAllItems();
 
         for(Map.Entry<Integer,String> entry : dataMap.entrySet()){
 
             dataCombo.addItem(new Item(entry.getKey(),entry.getValue()));
             dataComboTo.addItem(new Item(entry.getKey(),entry.getValue()));
         }
+        itemDataComboCount = dataCombo.getItemCount();
+
+        dataMap.clear();
+
+        revalidate();
+        repaint();
+
+        System.out.println("Data size: "+dataMap.size() + " : " + itemDataComboCount);
     }
 
     public void fireOpenEvent(String filename){
 
         GridLayout gridLayout = new GridLayout(1,1);
+
+        getContentPane().remove(resultPane);
+        getContentPane().remove(operationTop);
+        getContentPane().revalidate();
+        getContentPane().repaint();
 
         if(appListener!=null){
             //appListener.getFile();
@@ -243,6 +282,8 @@ public class View extends JFrame implements PropertyChangeListener{
             operationTop = new JPanel();
             operationContent = new JPanel();
             operationBottom = new JPanel();
+
+
 
             //appListener.getColumnId(2);
             operationContent.setLayout(new BoxLayout(operationContent, BoxLayout.X_AXIS));
@@ -256,19 +297,30 @@ public class View extends JFrame implements PropertyChangeListener{
 
 
             headermodel.addColumn("Lp.");
-            headermodel.addColumn("Nazwa kolumny");
-            headermodel.addColumn("Kolumna warunkowa");
-            headermodel.addColumn("Sumowanie");
+            headermodel.addColumn("Column Name");
+            headermodel.addColumn("Constraint");
+            headermodel.addColumn("Sum");
 
             JCheckBox checkBox = new JCheckBox();
 
             TableColumnModel tcm = headerTable.getColumnModel();
-            // tcm.getColumn(0).setMaxWidth(30);
-            // tcm.getColumn(1).setMaxWidth(120);
-            // tcm.getColumn(2).setMaxWidth(120);
-            // tcm.getColumn(3).setMaxWidth(120);
+
             tcm.getColumn(2).setCellEditor(new DefaultCellEditor(new JCheckBox()));
             tcm.getColumn(3).setCellEditor(new DefaultCellEditor(new JCheckBox()));
+            tcm.getColumn(3).setCellRenderer(headerTable.getDefaultRenderer(Boolean.class));
+            tcm.getColumn(2).setCellRenderer(headerTable.getDefaultRenderer(Boolean.class));
+
+            DefaultTableModel headermodel = new DefaultTableModel(){
+
+                @Override
+                public Class<?> getColumnClass(int columnNumber) {
+                    if (columnNumber == 2 || columnNumber == 3) {
+                        return Boolean.class;
+                    } else {
+                        return super.getColumnClass(columnNumber);
+                    }
+                }
+            };
 
 
             scrollHeader.setBorder(new TitledBorder("Column names"));
@@ -280,8 +332,8 @@ public class View extends JFrame implements PropertyChangeListener{
             operationBottom.setLayout(new MigLayout("left left, wrap, gapy 112"));
 
             range = new JLabel("Range: ");
-            JLabel from = new JLabel("From:");
-            JLabel fi = new JLabel("to:");
+            from = new JLabel("From:");
+            fi = new JLabel("to:");
 
 
             rangeT = new JFormattedTextField(amountFormat);
@@ -301,7 +353,6 @@ public class View extends JFrame implements PropertyChangeListener{
             rangeT.addPropertyChangeListener("value", this);
             rangeF.addPropertyChangeListener("value", this);
 
-            operationTop.add(range);
             operationTop.add(from);
             operationTop.add(dataCombo);
             operationTop.add(fi);
@@ -310,15 +361,18 @@ public class View extends JFrame implements PropertyChangeListener{
 
             System.out.println("Liczba kolumn"+ count);
 
-            dataCombo.addActionListener(e->{
-
-                Item selected_item_from = (Item) dataCombo.getSelectedItem();
-                dataFrom = selected_item_from.getId();
+            dataCombo.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    Item selected_item_from = (Item) dataCombo.getSelectedItem();
+                    dataFrom = selected_item_from.getId();
+                }
             });
 
-            dataComboTo.addActionListener(e->{
-                Item selected_item_to = (Item) dataComboTo.getSelectedItem();
-                dataTo = selected_item_to.getId();
+            dataComboTo.addItemListener(e -> {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    Item selected_item_to = (Item) dataComboTo.getSelectedItem();
+                    dataTo = selected_item_to.getId();
+                }
             });
 
 
@@ -383,7 +437,7 @@ public class View extends JFrame implements PropertyChangeListener{
                 }
             });
 
-            JButton button = new JButton("Calculate");
+            button = new JButton("Calculate");
             button.addActionListener(e -> {
                 fireDataMapEvent(textField,sumList,dataFrom,dataTo);
             });

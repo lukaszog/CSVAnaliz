@@ -35,10 +35,12 @@ public class Model{
     }
 
     public Map<Integer,String> getDataColumn(){
+        System.out.println("Jestem w getDataColumn - ładowanie daty");
         return dataRow;
     }
 
     public Map<Integer,Integer> getData(){
+        System.out.println("Jestem w getData");
         return data;
     }
 
